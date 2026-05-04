@@ -1,3 +1,3 @@
 window.LEGION_BOT_CONFIG = {
-  gasUrl: "https://script.google.com/macros/s/AKfycbxg7bgi4dFzgH3O0rqACRMbUqHbp0kYPGUolu6GfzotCjkW7smeC2_XUyghGGqNdRj8cA/exec"
+  gasUrl: "https://script.google.com/macros/s/AKfycbwZCOXSbAT4ykc8tm3v3y-dyqA5YvSWoGe3WOr6vsmpBTEUUNCSFBK0NpFcZ5igWcL_cw/exec"
 };
