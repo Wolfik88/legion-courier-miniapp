@@ -33,11 +33,38 @@
   const tariffSummary = document.getElementById("tariffSummary");
   const tariffNote = document.getElementById("tariffNote");
   const tariffDataState = document.getElementById("tariffDataState");
+  const registrationPanel = document.getElementById("registrationPanel");
   const registrationForm = document.getElementById("registrationForm");
   const registrationStatus = document.getElementById("registrationStatus");
   const candidateForm = document.getElementById("candidateForm");
   const candidateStatus = document.getElementById("candidateStatus");
   const navButtons = Array.from(document.querySelectorAll("[data-nav-target]"));
+  const accessStateBanner = document.getElementById("accessStateBanner");
+  const courierCabinetPanel = document.getElementById("courierCabinetPanel");
+  const refreshCabinetButton = document.getElementById("refreshCabinetButton");
+
+  const cabinetFields = {
+    name: document.getElementById("courierCabinetName"),
+    phone: document.getElementById("courierCabinetPhone"),
+    city: document.getElementById("courierCabinetCity"),
+    status: document.getElementById("courierCabinetStatus"),
+    workType: document.getElementById("courierCabinetWorkType"),
+    orders: document.getElementById("courierCabinetOrders"),
+    income: document.getElementById("courierCabinetIncome"),
+    failures: document.getElementById("courierCabinetFailures"),
+    notifications: document.getElementById("courierCabinetNotifications")
+  };
+
+  function setBanner(message, state) {
+    if (!accessStateBanner) return;
+    accessStateBanner.textContent = message || "";
+    accessStateBanner.className = `cabinet-access-note${state ? ` is-${state}` : ""}`;
+  }
+
+  function setVisible(element, visible) {
+    if (!element) return;
+    element.classList.toggle("is-hidden", !visible);
+  }
 
   function getTelegramUserMeta() {
     const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user || null : null;
@@ -100,8 +127,10 @@
   }
 
   function formatRubles(value) {
-    if (!Number.isFinite(value)) return "Уточняется";
-    return `${Math.round(value)} ₽`;
+    if (value === "" || value === null || value === undefined) return "—";
+    const parsed = parseRubles(value);
+    if (!Number.isFinite(parsed)) return String(value);
+    return `${Math.round(parsed)} ₽`;
   }
 
   function getTariffs() {
@@ -138,8 +167,6 @@
     const selectedCity = rows.find((row) => row.city === tariffCitySelect.value) || rows[0];
     const workTypeKey = tariffWorkTypeSelect.value;
     const baseRate = getBaseRate(selectedCity, workTypeKey);
-    const distanceExample = Number.isFinite(baseRate.value) ? baseRate.value + 2 * 17 : null;
-    const weightExample = Number.isFinite(baseRate.value) ? baseRate.value + 5 * 5 : null;
     const combinedExample = Number.isFinite(baseRate.value) ? baseRate.value + 2 * 17 + 5 * 5 : null;
 
     tariffSummary.innerHTML = `
@@ -184,8 +211,81 @@
     element.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function renderApprovedCabinet(access) {
+    const courier = access?.courier || {};
+    const dashboard = access?.dashboard || {};
+
+    if (cabinetFields.name) cabinetFields.name.textContent = courier.fullName || "Курьер";
+    if (cabinetFields.phone) cabinetFields.phone.textContent = courier.phone || "—";
+    if (cabinetFields.city) cabinetFields.city.textContent = courier.city || "—";
+    if (cabinetFields.status) cabinetFields.status.textContent = courier.status || "Активен";
+    if (cabinetFields.workType) cabinetFields.workType.textContent = courier.workType || courier.specialization || "—";
+    if (cabinetFields.orders) cabinetFields.orders.textContent = String(dashboard.orders ?? 0);
+    if (cabinetFields.income) cabinetFields.income.textContent = formatRubles(dashboard.income);
+    if (cabinetFields.failures) cabinetFields.failures.textContent = String(dashboard.totalFailures ?? 0);
+    if (cabinetFields.notifications) cabinetFields.notifications.textContent = String(dashboard.notifications ?? 0);
+
+    setVisible(courierCabinetPanel, true);
+    setVisible(registrationPanel, false);
+    setBanner("Доступ подтверждён. Кабинет открыт для этого Telegram-аккаунта.", "success");
+  }
+
+  function renderPendingAccess(registration) {
+    setVisible(courierCabinetPanel, false);
+    setVisible(registrationPanel, true);
+    registrationStatus.textContent = registration?.request_id
+      ? `Заявка ${registration.request_id} уже отправлена и ждёт проверки менеджером.`
+      : "После одобрения здесь будет открыт доступ в личный кабинет.";
+    setBanner("Доступ ещё не подтверждён. После модерации форма автоматически сменится на кабинет.", "pending");
+  }
+
+  function renderRejectedAccess() {
+    setVisible(courierCabinetPanel, false);
+    setVisible(registrationPanel, true);
+    registrationStatus.textContent = "Предыдущая заявка была отклонена. Можно отправить новую заявку или связаться с парком.";
+    setBanner("По этому Telegram-аккаунту доступ пока не открыт.", "warning");
+  }
+
+  async function loadAccessState() {
+    const userMeta = getTelegramUserMeta();
+
+    if (!userMeta.telegramUserId && !userMeta.telegramUsername) {
+      setVisible(courierCabinetPanel, false);
+      setVisible(registrationPanel, true);
+      setBanner("Mini App открыт вне Telegram-авторизации. Для автоматического входа откройте его из бота.", "warning");
+      return;
+    }
+
+    setBanner("Проверяю доступ к кабинету...", "neutral");
+
+    try {
+      const payload = await submitJsonp("getAccessStatusByTelegram", userMeta);
+      if (!payload?.ok) {
+        throw new Error(payload?.error || "Не удалось проверить статус доступа.");
+      }
+
+      const access = payload.access || {};
+      if (access.state === "approved") {
+        renderApprovedCabinet(access);
+        return;
+      }
+
+      if (access.state === "rejected" || access.state === "blocked") {
+        renderRejectedAccess();
+        return;
+      }
+
+      renderPendingAccess(access.registration || null);
+    } catch (error) {
+      setVisible(courierCabinetPanel, false);
+      setVisible(registrationPanel, true);
+      setBanner(error.message || "Не удалось проверить доступ к кабинету.", "warning");
+    }
+  }
+
   fillCityOptions();
   renderTariffSummary();
+  loadAccessState();
 
   tariffCitySelect.addEventListener("change", renderTariffSummary);
   tariffWorkTypeSelect.addEventListener("change", renderTariffSummary);
@@ -195,6 +295,12 @@
       scrollToSection(button.dataset.navTarget || "");
     });
   });
+
+  if (refreshCabinetButton) {
+    refreshCabinetButton.addEventListener("click", () => {
+      loadAccessState();
+    });
+  }
 
   registrationForm.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -221,12 +327,13 @@
         throw new Error(payload?.error || "Не удалось отправить заявку.");
       }
 
-      if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+      if (tg?.HapticFeedback?.notificationOccurred) {
         tg.HapticFeedback.notificationOccurred("success");
       }
 
       registrationStatus.textContent = `Заявка отправлена. ID: ${payload.requestId || "—"}. После проверки менеджер откроет доступ к кабинету.`;
       registrationForm.reset();
+      setBanner("Заявка отправлена. После одобрения кабинет будет открываться автоматически.", "pending");
     }).catch((error) => {
       registrationStatus.textContent = error.message || "Не удалось отправить заявку на доступ.";
     });
@@ -256,7 +363,7 @@
         throw new Error(payload?.error || "Не удалось отправить заявку кандидата.");
       }
 
-      if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+      if (tg?.HapticFeedback?.notificationOccurred) {
         tg.HapticFeedback.notificationOccurred("success");
       }
 

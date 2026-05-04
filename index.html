@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>LEGION Courier Bot</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
   <div class="page-shell">
@@ -170,23 +170,73 @@
 
       <section class="card" id="cabinet">
         <p class="section-eyebrow">Для действующего курьера</p>
-        <h3>Заявка на доступ в кабинет</h3>
+        <h3>Доступ в личный кабинет</h3>
         <p class="section-text">
-          Если ты уже работаешь с парком, оставь ФИО и телефон. После ручной проверки менеджер свяжет твой Telegram-аккаунт с карточкой курьера.
+          Если ты уже работаешь с парком, mini app проверит привязку твоего Telegram-аккаунта.
+          Если доступ ещё не подтверждён, ниже останется форма заявки на модерацию.
         </p>
 
-        <form class="stack-form" id="registrationForm">
-          <label class="field">
-            <span>ФИО</span>
-            <input id="registrationFullName" type="text" placeholder="Например: Иванов Иван Сергеевич">
-          </label>
-          <label class="field">
-            <span>Телефон</span>
-            <input id="registrationPhone" type="tel" placeholder="+7 999 123-45-67">
-          </label>
-          <button class="primary-button" type="submit">Отправить заявку на доступ</button>
-        </form>
-        <p class="form-status" id="registrationStatus">После одобрения здесь будет открыт доступ в личный кабинет.</p>
+        <div class="cabinet-access-note" id="accessStateBanner"></div>
+
+        <section class="courier-cabinet is-hidden" id="courierCabinetPanel">
+          <div class="courier-cabinet-head">
+            <div>
+              <p class="section-eyebrow">Ваш кабинет</p>
+              <h4 id="courierCabinetName">Курьер</h4>
+            </div>
+            <button class="ghost-button" id="refreshCabinetButton" type="button">Обновить кабинет</button>
+          </div>
+
+          <div class="courier-cabinet-grid">
+            <article class="courier-cabinet-item">
+              <span>Телефон</span>
+              <strong id="courierCabinetPhone">—</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Город</span>
+              <strong id="courierCabinetCity">—</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Статус</span>
+              <strong id="courierCabinetStatus">—</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Тип работы</span>
+              <strong id="courierCabinetWorkType">—</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Заказов</span>
+              <strong id="courierCabinetOrders">0</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Доход</span>
+              <strong id="courierCabinetIncome">—</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Срывов</span>
+              <strong id="courierCabinetFailures">0</strong>
+            </article>
+            <article class="courier-cabinet-item">
+              <span>Уведомлений</span>
+              <strong id="courierCabinetNotifications">0</strong>
+            </article>
+          </div>
+        </section>
+
+        <div id="registrationPanel">
+          <form class="stack-form" id="registrationForm">
+            <label class="field">
+              <span>ФИО</span>
+              <input id="registrationFullName" type="text" placeholder="Например: Иванов Иван Сергеевич">
+            </label>
+            <label class="field">
+              <span>Телефон</span>
+              <input id="registrationPhone" type="tel" placeholder="+7 999 123-45-67">
+            </label>
+            <button class="primary-button" type="submit">Отправить заявку на доступ</button>
+          </form>
+          <p class="form-status" id="registrationStatus">После одобрения здесь будет открыт доступ в личный кабинет.</p>
+        </div>
       </section>
 
       <section class="card" id="candidate">
@@ -226,7 +276,7 @@
   </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="config.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="config.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
