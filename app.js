@@ -42,6 +42,7 @@
   const accessStateBanner = document.getElementById("accessStateBanner");
   const courierCabinetPanel = document.getElementById("courierCabinetPanel");
   const refreshCabinetButton = document.getElementById("refreshCabinetButton");
+  const courierNotificationsList = document.getElementById("courierNotificationsList");
 
   const cabinetFields = {
     name: document.getElementById("courierCabinetName"),
@@ -59,6 +60,10 @@
     if (!accessStateBanner) return;
     accessStateBanner.textContent = message || "";
     accessStateBanner.className = `cabinet-access-note${state ? ` is-${state}` : ""}`;
+  }
+
+  function setApprovedView(enabled) {
+    document.body.classList.toggle("is-approved-view", Boolean(enabled));
   }
 
   function setVisible(element, visible) {
@@ -225,12 +230,14 @@
     if (cabinetFields.failures) cabinetFields.failures.textContent = String(dashboard.totalFailures ?? 0);
     if (cabinetFields.notifications) cabinetFields.notifications.textContent = String(dashboard.notifications ?? 0);
 
+    setApprovedView(true);
     setVisible(courierCabinetPanel, true);
     setVisible(registrationPanel, false);
     setBanner("Доступ подтверждён. Кабинет открыт для этого Telegram-аккаунта.", "success");
   }
 
   function renderPendingAccess(registration) {
+    setApprovedView(false);
     setVisible(courierCabinetPanel, false);
     setVisible(registrationPanel, true);
     registrationStatus.textContent = registration?.request_id
@@ -240,6 +247,7 @@
   }
 
   function renderRejectedAccess() {
+    setApprovedView(false);
     setVisible(courierCabinetPanel, false);
     setVisible(registrationPanel, true);
     registrationStatus.textContent = "Предыдущая заявка была отклонена. Можно отправить новую заявку или связаться с парком.";
@@ -250,6 +258,7 @@
     const userMeta = getTelegramUserMeta();
 
     if (!userMeta.telegramUserId && !userMeta.telegramUsername) {
+      setApprovedView(false);
       setVisible(courierCabinetPanel, false);
       setVisible(registrationPanel, true);
       setBanner("Mini App открыт вне Telegram-авторизации. Для автоматического входа откройте его из бота.", "warning");
@@ -267,6 +276,7 @@
       const access = payload.access || {};
       if (access.state === "approved") {
         renderApprovedCabinet(access);
+        loadNotifications(access.courierId);
         return;
       }
 
@@ -277,9 +287,56 @@
 
       renderPendingAccess(access.registration || null);
     } catch (error) {
+      setApprovedView(false);
       setVisible(courierCabinetPanel, false);
       setVisible(registrationPanel, true);
       setBanner(error.message || "Не удалось проверить доступ к кабинету.", "warning");
+    }
+  }
+
+  function renderNotifications(notifications) {
+    if (!courierNotificationsList) return;
+
+    if (!Array.isArray(notifications) || !notifications.length) {
+      courierNotificationsList.innerHTML = `<div class="courier-notification-empty">Пока уведомлений нет. Когда в CRM зафиксируют срыв или важное сообщение, оно появится здесь.</div>`;
+      if (cabinetFields.notifications) cabinetFields.notifications.textContent = "0";
+      return;
+    }
+
+    if (cabinetFields.notifications) {
+      cabinetFields.notifications.textContent = String(notifications.length);
+    }
+
+    courierNotificationsList.innerHTML = notifications.map((item) => {
+      const type = String(item.type || item.notification_type || "").trim().toLowerCase();
+      const title = type === "failure_detected" ? "Зафиксирован срыв" : "Уведомление от парка";
+      const date = String(item.created_at || item.sent_at || "").trim();
+      const message = String(item.message || "Новое уведомление").trim();
+
+      return `
+        <article class="courier-notification-card ${type === "failure_detected" ? "is-failure" : ""}">
+          <strong>${title}</strong>
+          <p>${message}</p>
+          <p>${date || "Сейчас"}</p>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function loadNotifications(courierId) {
+    if (!courierId) {
+      renderNotifications([]);
+      return;
+    }
+
+    try {
+      const payload = await submitJsonp("getCourierNotifications", { courierId });
+      if (!payload?.ok) {
+        throw new Error(payload?.error || "Не удалось загрузить уведомления.");
+      }
+      renderNotifications(payload.notifications || []);
+    } catch (error) {
+      renderNotifications([]);
     }
   }
 

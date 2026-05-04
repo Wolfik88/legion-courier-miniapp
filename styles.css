@@ -33,6 +33,17 @@ body {
   padding: 24px;
 }
 
+body.is-approved-view .hero,
+body.is-approved-view .content-grid > section:not(#cabinet) {
+  display: none;
+}
+
+body.is-approved-view #cabinet > .section-eyebrow,
+body.is-approved-view #cabinet > h3,
+body.is-approved-view #cabinet > .section-text {
+  display: none;
+}
+
 .page-shell {
   max-width: 1180px;
   margin: 0 auto;
@@ -360,6 +371,54 @@ body {
 
 .courier-cabinet-item strong {
   font-size: 20px;
+}
+
+.courier-cabinet-feed {
+  display: grid;
+  gap: 14px;
+}
+
+.courier-cabinet-feed-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.courier-notifications-list {
+  display: grid;
+  gap: 12px;
+}
+
+.courier-notification-card {
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.courier-notification-card.is-failure {
+  background: rgba(255, 235, 235, 0.92);
+  border-color: rgba(214, 79, 79, 0.18);
+}
+
+.courier-notification-card strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.courier-notification-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.courier-notification-empty {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.56);
 }
 
 @media (max-width: 900px) {
