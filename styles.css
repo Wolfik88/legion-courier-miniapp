@@ -1,0 +1,319 @@
+:root {
+  --bg: #eef4ff;
+  --panel: rgba(255, 255, 255, 0.92);
+  --panel-strong: #ffffff;
+  --line: rgba(107, 134, 179, 0.24);
+  --text: #1d2a44;
+  --muted: #60718f;
+  --accent: #0f6fff;
+  --accent-soft: rgba(15, 111, 255, 0.12);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --shadow: 0 30px 60px rgba(40, 69, 120, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(113, 176, 255, 0.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(131, 222, 196, 0.18), transparent 28%),
+    linear-gradient(180deg, #f5f8ff 0%, #eef4ff 100%);
+}
+
+body {
+  padding: 24px;
+}
+
+.page-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: 20px;
+}
+
+.hero,
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+
+.hero {
+  padding: 28px;
+}
+
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.hero-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #0d1627, #162d54 60%, #0f6fff);
+  color: #fff;
+  font-weight: 800;
+  font-size: 26px;
+}
+
+.hero-eyebrow,
+.section-eyebrow {
+  margin: 0 0 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 12px;
+}
+
+.hero-brand h1,
+.hero-copy h2,
+.card h3,
+.card h4 {
+  margin: 0;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.95fr);
+  gap: 20px;
+}
+
+.hero-copy {
+  padding: 30px;
+}
+
+.hero-kicker {
+  margin: 0 0 10px;
+  color: #0f6fff;
+  font-weight: 700;
+}
+
+.hero-copy h2 {
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  max-width: 12ch;
+}
+
+.hero-text,
+.section-text,
+.info-tile p,
+.vacancy-card p,
+.about-stat span,
+.hero-status p,
+.tariff-note,
+.form-status {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.hero-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(15, 111, 255, 0.08);
+  color: #194178;
+  font-size: 14px;
+}
+
+.hero-side {
+  display: grid;
+  gap: 16px;
+}
+
+.hero-metrics,
+.hero-status,
+.card {
+  padding: 24px;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.metric {
+  padding: 18px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+  text-align: center;
+}
+
+.metric-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.metric-label {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.content-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.benefits-grid,
+.vacancies-grid,
+.about-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.benefits-grid,
+.vacancies-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.about-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.info-tile,
+.vacancy-card,
+.about-stat,
+.tariff-summary-item {
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.section-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.section-tag {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: #194178;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tariff-card {
+  display: grid;
+  gap: 18px;
+}
+
+.tariff-form,
+.stack-form {
+  display: grid;
+  gap: 14px;
+}
+
+.tariff-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.field span {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 12px 14px;
+  color: var(--text);
+  font: inherit;
+}
+
+.tariff-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tariff-summary-item strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+.primary-button,
+.ghost-button {
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #0f6fff, #29b0ff);
+  color: #fff;
+  box-shadow: 0 16px 26px rgba(15, 111, 255, 0.24);
+}
+
+.ghost-button {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  body {
+    padding: 16px;
+  }
+
+  .hero-layout,
+  .benefits-grid,
+  .vacancies-grid,
+  .about-grid,
+  .tariff-form,
+  .tariff-summary,
+  .hero-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy h2 {
+    max-width: none;
+  }
+}
