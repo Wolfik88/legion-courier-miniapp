@@ -1,5 +1,7 @@
 (function () {
   const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  const botConfig = window.LEGION_BOT_CONFIG || {};
+  const gasUrl = String(botConfig.gasUrl || "").trim();
 
   if (tg) {
     try {
@@ -36,6 +38,56 @@
   const candidateForm = document.getElementById("candidateForm");
   const candidateStatus = document.getElementById("candidateStatus");
   const navButtons = Array.from(document.querySelectorAll("[data-nav-target]"));
+
+  function getTelegramUserMeta() {
+    const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user || null : null;
+    return {
+      telegramUserId: String(user?.id || "").trim(),
+      telegramUsername: String(user?.username ? `@${user.username}` : "").trim(),
+      chatId: ""
+    };
+  }
+
+  function submitJsonp(action, params) {
+    return new Promise((resolve, reject) => {
+      if (!gasUrl) {
+        reject(new Error("Не настроен gasUrl в config.js"));
+        return;
+      }
+
+      const callbackName = `legionBotJsonp_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+      const script = document.createElement("script");
+      const separator = gasUrl.includes("?") ? "&" : "?";
+      const searchParams = new URLSearchParams({
+        action,
+        callback: callbackName,
+        ...params
+      });
+      const timeoutId = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("Истекло время ожидания ответа от bot Apps Script."));
+      }, 20000);
+
+      function cleanup() {
+        window.clearTimeout(timeoutId);
+        delete window[callbackName];
+        script.remove();
+      }
+
+      window[callbackName] = (payload) => {
+        cleanup();
+        resolve(payload);
+      };
+
+      script.onerror = () => {
+        cleanup();
+        reject(new Error("Не удалось обратиться к bot Apps Script."));
+      };
+
+      script.src = `${gasUrl}${separator}${searchParams.toString()}`;
+      document.body.appendChild(script);
+    });
+  }
 
   function parseRubles(value) {
     const normalized = String(value || "")
@@ -154,29 +206,64 @@
       return;
     }
 
-    if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
-      tg.HapticFeedback.notificationOccurred("success");
-    }
+    registrationStatus.textContent = "Отправляю заявку на доступ...";
 
-    registrationStatus.textContent = `Тестовая заявка отправлена для ${fullName}. Следующий шаг: связать Telegram с карточкой курьера через CRM-модерацию.`;
-    registrationForm.reset();
+    const userMeta = getTelegramUserMeta();
+
+    submitJsonp("submitRegistration", {
+      fullName,
+      phone,
+      telegramUserId: userMeta.telegramUserId,
+      telegramUsername: userMeta.telegramUsername,
+      chatId: userMeta.chatId
+    }).then((payload) => {
+      if (!payload?.ok) {
+        throw new Error(payload?.error || "Не удалось отправить заявку.");
+      }
+
+      if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+        tg.HapticFeedback.notificationOccurred("success");
+      }
+
+      registrationStatus.textContent = `Заявка отправлена. ID: ${payload.requestId || "—"}. После проверки менеджер откроет доступ к кабинету.`;
+      registrationForm.reset();
+    }).catch((error) => {
+      registrationStatus.textContent = error.message || "Не удалось отправить заявку на доступ.";
+    });
   });
 
   candidateForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const fullName = document.getElementById("candidateFullName").value.trim();
     const phone = document.getElementById("candidatePhone").value.trim();
+    const city = document.getElementById("candidateCity").value.trim();
+    const workType = document.getElementById("candidateWorkType").value.trim();
 
     if (!fullName || !phone) {
-      candidateStatus.textContent = "Заполни хотя бы ФИО и телефон, чтобы оставить тестовую заявку.";
+      candidateStatus.textContent = "Заполни хотя бы ФИО и телефон, чтобы оставить заявку.";
       return;
     }
 
-    if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
-      tg.HapticFeedback.notificationOccurred("success");
-    }
+    candidateStatus.textContent = "Отправляю заявку кандидата...";
 
-    candidateStatus.textContent = `Тестовая заявка кандидата для ${fullName} сохранена. Позже этот поток можно подключить к bot_candidate_leads.`;
-    candidateForm.reset();
+    submitJsonp("submitCandidateLead", {
+      fullName,
+      phone,
+      city,
+      workType
+    }).then((payload) => {
+      if (!payload?.ok) {
+        throw new Error(payload?.error || "Не удалось отправить заявку кандидата.");
+      }
+
+      if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+        tg.HapticFeedback.notificationOccurred("success");
+      }
+
+      candidateStatus.textContent = `Заявка отправлена. ID: ${payload.leadId || "—"}. Менеджер сможет увидеть её в CRM.`;
+      candidateForm.reset();
+    }).catch((error) => {
+      candidateStatus.textContent = error.message || "Не удалось отправить заявку кандидата.";
+    });
   });
 })();
