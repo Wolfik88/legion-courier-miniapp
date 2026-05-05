@@ -15,7 +15,12 @@
   }
 
   const dom = {
+    loadingView: document.getElementById("loadingView"),
+    loadingTitle: document.getElementById("loadingTitle"),
+    loadingSubtitle: document.getElementById("loadingSubtitle"),
     guestView: document.getElementById("guestView"),
+    guestTitle: document.getElementById("guestTitle"),
+    guestText: document.getElementById("guestText"),
     approvedView: document.getElementById("approvedView"),
     openCourierTab: document.getElementById("openCourierTab"),
     openCandidateTab: document.getElementById("openCandidateTab"),
@@ -46,6 +51,14 @@
   function setVisible(element, visible) {
     if (!element) return;
     element.classList.toggle("is-hidden", !visible);
+  }
+
+  function setLoadingState(title, subtitle) {
+    if (dom.loadingTitle) dom.loadingTitle.textContent = title;
+    if (dom.loadingSubtitle) dom.loadingSubtitle.textContent = subtitle;
+    setVisible(dom.loadingView, true);
+    setVisible(dom.guestView, false);
+    setVisible(dom.approvedView, false);
   }
 
   function getTelegramUserMeta() {
@@ -158,7 +171,7 @@
 
     const items = Array.isArray(newsItems) && newsItems.length ? newsItems.slice(0, 4) : fallbackNews;
     dom.homeNewsRow.innerHTML = items.map((item) => `
-      <article class="news-card" data-type="${escapeHtml(item.type || "system")}">
+      <article class="news-card" data-type="${escapeHtml(item.type || "system")}" data-news-id="${escapeHtml(item.id || "")}">
         <span class="news-card-type">${escapeHtml(item.typeLabel || item.type || "Новость")}</span>
         <p class="news-card-title">${escapeHtml(item.title || "Новость")}</p>
         <p class="news-card-subtitle">${escapeHtml(item.subtitle || "Карточка новости из CRM")}</p>
@@ -173,27 +186,33 @@
 
     dom.homeCourierInitials.textContent = getInitials(courier.fullName);
     dom.homeCourierName.textContent = courier.fullName || "Курьер";
-    dom.homeCourierBadge.textContent = courier.workType || courier.specialization || "Партнёрский сервис";
+    dom.homeCourierBadge.textContent = courier.status || "Статус уточняется";
     dom.homeIncome.textContent = formatRubles(dashboard.totalIncome || dashboard.income || 0);
     dom.homeOrders.textContent = String(dashboard.totalOrders || dashboard.orders || 0);
-    dom.homeFailures.textContent = String(dashboard.totalFailures || 0);
-    dom.homeNotificationsMeta.textContent = `Новых уведомлений: ${dashboard.unreadNotifications || 0}`;
+    dom.homeFailures.textContent = `${dashboard.todayFailures || dashboard.totalFailures || 0}/${dashboard.failureLimit || 5}`;
+    dom.homeNotificationsMeta.textContent = `Последнее обновление: ${home.generatedAtLabel || "сейчас"}`;
     renderNews(home.news || []);
 
+    setVisible(dom.loadingView, false);
     setVisible(dom.guestView, false);
     setVisible(dom.approvedView, true);
   }
 
-  function renderGuest(message) {
-    if (message) {
-      dom.registrationStatus.textContent = message;
+  function renderGuest(message, introText) {
+    if (message) dom.registrationStatus.textContent = message;
+    if (dom.guestTitle) dom.guestTitle.textContent = "Кабинет курьера";
+    if (dom.guestText) {
+      dom.guestText.textContent = introText || "Если вы уже в парке, выберите соответствующий вариант. Если вас не нашли, можно отправить заявку на доступ или оставить контакт как новый кандидат.";
     }
+    setVisible(dom.loadingView, false);
     setVisible(dom.guestView, true);
     setVisible(dom.approvedView, false);
   }
 
   async function loadHome() {
     const userMeta = getTelegramUserMeta();
+    setLoadingState("Загружаем профиль", "Проверяем, есть ли этот курьер в парке и открыт ли доступ в кабинет.");
+
     if (!userMeta.telegramUserId && !userMeta.telegramUsername) {
       renderGuest("Откройте mini app из Telegram-бота, чтобы система определила ваш доступ.");
       return;
@@ -213,7 +232,10 @@
         return;
       }
 
-      renderGuest("Доступ ещё не подтверждён. После модерации здесь автоматически откроется кабинет.");
+      renderGuest(
+        "Простите, не нашли вас автоматически. Выберите, вы уже в парке или хотите подключиться как новый кандидат.",
+        "Мы не нашли активную привязку к карточке курьера. Если вы уже работаете с парком, отправьте заявку на доступ. Если вы ещё не в парке, оставьте заявку на подключение."
+      );
     } catch (error) {
       renderGuest(error.message || "Не удалось загрузить домашний экран.");
     }
@@ -264,6 +286,20 @@
       <p>Здесь будет короткая инструкция по выплатам, графику и статусу доступности вывода.</p>
       <p>Полный сценарий вывода добавим следующим этапом.</p>
     `);
+  }
+
+  function openNewsItem(newsId) {
+    const news = Array.isArray(currentHomePayload?.news) ? currentHomePayload.news : [];
+    const item = news.find((entry) => entry.id === newsId) || null;
+    if (!item) return;
+
+    showSheet(
+      item.title || "Новость",
+      `
+        <p>${escapeHtml(item.subtitle || "")}</p>
+        <p>${escapeHtml(item.body || "Полный текст новости пока не заполнен.")}</p>
+      `
+    );
   }
 
   function bindActions() {
@@ -365,6 +401,11 @@
     });
 
     dom.openNotificationsCard.addEventListener("click", openNotifications);
+    dom.homeNewsRow.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-news-id]");
+      if (!card) return;
+      openNewsItem(card.dataset.newsId || "");
+    });
     dom.sheetBackdrop.addEventListener("click", closeSheet);
     dom.closeSheetButton.addEventListener("click", closeSheet);
   }

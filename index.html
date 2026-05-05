@@ -8,19 +8,25 @@
 </head>
 <body>
   <main class="miniapp-root">
+    <section class="loading-view" id="loadingView">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <h1 id="loadingTitle">Загружаем кабинет</h1>
+        <p id="loadingSubtitle">Проверяем профиль и привязку Telegram-аккаунта.</p>
+      </div>
+    </section>
+
     <section class="guest-view" id="guestView">
       <div class="guest-card">
         <div class="guest-brand">
           <div class="guest-logo">L</div>
           <div>
-            <p class="guest-eyebrow">LEGION &amp; RESPECT</p>
-            <h1>Кабинет курьера</h1>
-          </div>
+          <p class="guest-eyebrow">LEGION &amp; RESPECT</p>
+          <h1 id="guestTitle">Кабинет курьера</h1>
         </div>
+      </div>
 
-        <p class="guest-text">
-          Если вы уже работаете с парком, отправьте заявку на доступ. Если вы новый кандидат, оставьте контакт для подключения.
-        </p>
+        <p class="guest-text" id="guestText">Если вы уже работаете с парком, отправьте заявку на доступ. Если вы новый кандидат, оставьте контакт для подключения.</p>
 
         <div class="guest-switch">
           <button class="guest-tab is-active" id="openCourierTab" type="button">Я уже в парке</button>
@@ -106,10 +112,10 @@
         </article>
 
         <article class="stat-card stat-card-alerts" id="openNotificationsCard">
-          <p class="stat-label">Срывы и уведомления</p>
-          <strong class="stat-value" id="homeFailures">0</strong>
-          <p class="stat-meta" id="homeNotificationsMeta">Новых уведомлений: 0</p>
-        </article>
+            <p class="stat-label">Срывы сегодня</p>
+            <strong class="stat-value" id="homeFailures">0</strong>
+            <p class="stat-meta" id="homeNotificationsMeta">Последнее обновление: —</p>
+          </article>
       </section>
 
       <button class="invite-card" data-home-action="invite" type="button">
