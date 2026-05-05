@@ -7,64 +7,41 @@
     try {
       tg.ready();
       tg.expand();
-      tg.setBackgroundColor("#eef4ff");
-      tg.setHeaderColor("#eef4ff");
+      tg.setBackgroundColor("#121831");
+      tg.setHeaderColor("#121831");
     } catch (error) {
       console.warn("Telegram WebApp init skipped:", error);
     }
   }
 
-  const defaultTariffs = [
-    { city: "Москва", auto: "280", electro: "230", velo: "210", foot: "190" },
-    { city: "Санкт-Петербург", auto: "270", electro: "225", velo: "205", foot: "185" },
-    { city: "Казань", auto: "250", electro: "210", velo: "195", foot: "" },
-    { city: "Самара", auto: "245", electro: "", velo: "188", foot: "172" }
-  ];
-
-  const workTypeLabels = {
-    auto: "Авто",
-    electro: "Электро-вело",
-    velo: "Вело",
-    foot: "Пеший"
+  const dom = {
+    guestView: document.getElementById("guestView"),
+    approvedView: document.getElementById("approvedView"),
+    openCourierTab: document.getElementById("openCourierTab"),
+    openCandidateTab: document.getElementById("openCandidateTab"),
+    courierGuestPanel: document.getElementById("courierGuestPanel"),
+    candidateGuestPanel: document.getElementById("candidateGuestPanel"),
+    registrationForm: document.getElementById("registrationForm"),
+    candidateForm: document.getElementById("candidateForm"),
+    registrationStatus: document.getElementById("registrationStatus"),
+    candidateStatus: document.getElementById("candidateStatus"),
+    homeCourierInitials: document.getElementById("homeCourierInitials"),
+    homeCourierName: document.getElementById("homeCourierName"),
+    homeCourierBadge: document.getElementById("homeCourierBadge"),
+    homeNewsRow: document.getElementById("homeNewsRow"),
+    homeIncome: document.getElementById("homeIncome"),
+    homeOrders: document.getElementById("homeOrders"),
+    homeFailures: document.getElementById("homeFailures"),
+    homeNotificationsMeta: document.getElementById("homeNotificationsMeta"),
+    openNotificationsCard: document.getElementById("openNotificationsCard"),
+    sheetBackdrop: document.getElementById("sheetBackdrop"),
+    infoSheet: document.getElementById("infoSheet"),
+    sheetTitle: document.getElementById("sheetTitle"),
+    sheetBody: document.getElementById("sheetBody"),
+    closeSheetButton: document.getElementById("closeSheetButton")
   };
 
-  const tariffCitySelect = document.getElementById("tariffCitySelect");
-  const tariffWorkTypeSelect = document.getElementById("tariffWorkTypeSelect");
-  const tariffSummary = document.getElementById("tariffSummary");
-  const tariffNote = document.getElementById("tariffNote");
-  const tariffDataState = document.getElementById("tariffDataState");
-  const registrationPanel = document.getElementById("registrationPanel");
-  const registrationForm = document.getElementById("registrationForm");
-  const registrationStatus = document.getElementById("registrationStatus");
-  const candidateForm = document.getElementById("candidateForm");
-  const candidateStatus = document.getElementById("candidateStatus");
-  const navButtons = Array.from(document.querySelectorAll("[data-nav-target]"));
-  const accessStateBanner = document.getElementById("accessStateBanner");
-  const courierCabinetPanel = document.getElementById("courierCabinetPanel");
-  const refreshCabinetButton = document.getElementById("refreshCabinetButton");
-  const courierNotificationsList = document.getElementById("courierNotificationsList");
-
-  const cabinetFields = {
-    name: document.getElementById("courierCabinetName"),
-    phone: document.getElementById("courierCabinetPhone"),
-    city: document.getElementById("courierCabinetCity"),
-    status: document.getElementById("courierCabinetStatus"),
-    workType: document.getElementById("courierCabinetWorkType"),
-    orders: document.getElementById("courierCabinetOrders"),
-    income: document.getElementById("courierCabinetIncome"),
-    failures: document.getElementById("courierCabinetFailures"),
-    notifications: document.getElementById("courierCabinetNotifications")
-  };
-
-  function setBanner(message, state) {
-    if (!accessStateBanner) return;
-    accessStateBanner.textContent = message || "";
-    accessStateBanner.className = `cabinet-access-note${state ? ` is-${state}` : ""}`;
-  }
-
-  function setApprovedView(enabled) {
-    document.body.classList.toggle("is-approved-view", Boolean(enabled));
-  }
+  let currentHomePayload = null;
 
   function setVisible(element, visible) {
     if (!element) return;
@@ -80,7 +57,16 @@
     };
   }
 
-  function submitJsonp(action, params) {
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function submitJsonp(action, params = {}) {
     return new Promise((resolve, reject) => {
       if (!gasUrl) {
         reject(new Error("Не настроен gasUrl в config.js"));
@@ -132,302 +118,257 @@
   }
 
   function formatRubles(value) {
-    if (value === "" || value === null || value === undefined) return "—";
     const parsed = parseRubles(value);
-    if (!Number.isFinite(parsed)) return String(value);
-    return `${Math.round(parsed)} ₽`;
+    if (!Number.isFinite(parsed)) return "0 ₽";
+    return `${Math.round(parsed).toLocaleString("ru-RU")} ₽`;
   }
 
-  function getTariffs() {
-    return Array.isArray(window.LEGION_BOT_TARIFFS) && window.LEGION_BOT_TARIFFS.length
-      ? window.LEGION_BOT_TARIFFS
-      : defaultTariffs;
+  function getInitials(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    return (parts[0]?.[0] || "L") + (parts[1]?.[0] || "");
   }
 
-  function getAverageForCity(cityRow) {
-    const values = ["auto", "electro", "velo", "foot"]
-      .map((key) => parseRubles(cityRow[key]))
-      .filter((value) => Number.isFinite(value));
-
-    if (!values.length) return null;
-    return values.reduce((sum, value) => sum + value, 0) / values.length;
+  function showSheet(title, html) {
+    dom.sheetTitle.textContent = title;
+    dom.sheetBody.innerHTML = html;
+    setVisible(dom.sheetBackdrop, true);
+    setVisible(dom.infoSheet, true);
   }
 
-  function getBaseRate(cityRow, workTypeKey) {
-    const exact = parseRubles(cityRow?.[workTypeKey]);
-    if (Number.isFinite(exact)) {
-      return { value: exact, source: "exact" };
+  function closeSheet() {
+    setVisible(dom.sheetBackdrop, false);
+    setVisible(dom.infoSheet, false);
+  }
+
+  function openPlaceholderSheet(title, text) {
+    showSheet(title, `<p>${escapeHtml(text)}</p>`);
+  }
+
+  function normalizeHomePayload(payload) {
+    if (!payload?.ok || !payload.home) return null;
+    return payload.home;
+  }
+
+  function renderNews(newsItems) {
+    const fallbackNews = [
+      { title: "Ваши итоги", subtitle: "Появится ручная новость из CRM", type: "system" },
+      { title: "Качество работы", subtitle: "Здесь можно публиковать важные обновления", type: "system" },
+      { title: "Срыв и обновления", subtitle: "Служебные новости и предупреждения", type: "warning" }
+    ];
+
+    const items = Array.isArray(newsItems) && newsItems.length ? newsItems.slice(0, 4) : fallbackNews;
+    dom.homeNewsRow.innerHTML = items.map((item) => `
+      <article class="news-card" data-type="${escapeHtml(item.type || "system")}">
+        <span class="news-card-type">${escapeHtml(item.typeLabel || item.type || "Новость")}</span>
+        <p class="news-card-title">${escapeHtml(item.title || "Новость")}</p>
+        <p class="news-card-subtitle">${escapeHtml(item.subtitle || "Карточка новости из CRM")}</p>
+      </article>
+    `).join("");
+  }
+
+  function renderHome(home) {
+    currentHomePayload = home;
+    const courier = home.courier || {};
+    const dashboard = home.dashboard || {};
+
+    dom.homeCourierInitials.textContent = getInitials(courier.fullName);
+    dom.homeCourierName.textContent = courier.fullName || "Курьер";
+    dom.homeCourierBadge.textContent = courier.workType || courier.specialization || "Партнёрский сервис";
+    dom.homeIncome.textContent = formatRubles(dashboard.totalIncome || dashboard.income || 0);
+    dom.homeOrders.textContent = String(dashboard.totalOrders || dashboard.orders || 0);
+    dom.homeFailures.textContent = String(dashboard.totalFailures || 0);
+    dom.homeNotificationsMeta.textContent = `Новых уведомлений: ${dashboard.unreadNotifications || 0}`;
+    renderNews(home.news || []);
+
+    setVisible(dom.guestView, false);
+    setVisible(dom.approvedView, true);
+  }
+
+  function renderGuest(message) {
+    if (message) {
+      dom.registrationStatus.textContent = message;
     }
-
-    const average = getAverageForCity(cityRow);
-    if (Number.isFinite(average)) {
-      return { value: average, source: "average" };
-    }
-
-    return { value: null, source: "missing" };
+    setVisible(dom.guestView, true);
+    setVisible(dom.approvedView, false);
   }
 
-  function renderTariffSummary() {
-    const rows = getTariffs();
-    const selectedCity = rows.find((row) => row.city === tariffCitySelect.value) || rows[0];
-    const workTypeKey = tariffWorkTypeSelect.value;
-    const baseRate = getBaseRate(selectedCity, workTypeKey);
-    const combinedExample = Number.isFinite(baseRate.value) ? baseRate.value + 2 * 17 + 5 * 5 : null;
-
-    tariffSummary.innerHTML = `
-      <article class="tariff-summary-item">
-        <span>Фикс в вашем городе</span>
-        <strong>${formatRubles(baseRate.value)}</strong>
-      </article>
-      <article class="tariff-summary-item">
-        <span>Доплата за дальность</span>
-        <strong>+17 ₽/км</strong>
-      </article>
-      <article class="tariff-summary-item">
-        <span>Доплата за перевес</span>
-        <strong>+5 ₽/кг</strong>
-      </article>
-      <article class="tariff-summary-item">
-        <span>Пример расчёта</span>
-        <strong>${formatRubles(combinedExample)}</strong>
-      </article>
-    `;
-
-    if (baseRate.source === "exact") {
-      tariffNote.textContent = `Для города «${selectedCity.city}» и формата «${workTypeLabels[workTypeKey]}» показываем фикс по справочнику. Пример выше учитывает заказ на 5 км и перевес 35 кг.`;
-    } else if (baseRate.source === "average") {
-      tariffNote.textContent = `Для города «${selectedCity.city}» точного фикса для формата «${workTypeLabels[workTypeKey]}» пока нет, поэтому показываем среднюю ставку по доступным форматам в этом городе.`;
-    } else {
-      tariffNote.textContent = "По выбранному городу ставка пока уточняется. Оставьте заявку, и менеджер даст актуальные условия.";
-    }
-  }
-
-  function fillCityOptions() {
-    const rows = getTariffs();
-    tariffCitySelect.innerHTML = rows
-      .map((row) => `<option value="${row.city}">${row.city}</option>`)
-      .join("");
-    tariffDataState.textContent = rows === defaultTariffs ? "Тестовые тарифы" : "Тарифы из CRM";
-  }
-
-  function scrollToSection(id) {
-    const element = document.getElementById(id);
-    if (!element) return;
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  function renderApprovedCabinet(access) {
-    const courier = access?.courier || {};
-    const dashboard = access?.dashboard || {};
-
-    if (cabinetFields.name) cabinetFields.name.textContent = courier.fullName || "Курьер";
-    if (cabinetFields.phone) cabinetFields.phone.textContent = courier.phone || "—";
-    if (cabinetFields.city) cabinetFields.city.textContent = courier.city || "—";
-    if (cabinetFields.status) cabinetFields.status.textContent = courier.status || "Активен";
-    if (cabinetFields.workType) cabinetFields.workType.textContent = courier.workType || courier.specialization || "—";
-    if (cabinetFields.orders) cabinetFields.orders.textContent = String(dashboard.orders ?? 0);
-    if (cabinetFields.income) cabinetFields.income.textContent = formatRubles(dashboard.income);
-    if (cabinetFields.failures) cabinetFields.failures.textContent = String(dashboard.totalFailures ?? 0);
-    if (cabinetFields.notifications) cabinetFields.notifications.textContent = String(dashboard.notifications ?? 0);
-
-    setApprovedView(true);
-    setVisible(courierCabinetPanel, true);
-    setVisible(registrationPanel, false);
-    setBanner("Доступ подтверждён. Кабинет открыт для этого Telegram-аккаунта.", "success");
-  }
-
-  function renderPendingAccess(registration) {
-    setApprovedView(false);
-    setVisible(courierCabinetPanel, false);
-    setVisible(registrationPanel, true);
-    registrationStatus.textContent = registration?.request_id
-      ? `Заявка ${registration.request_id} уже отправлена и ждёт проверки менеджером.`
-      : "После одобрения здесь будет открыт доступ в личный кабинет.";
-    setBanner("Доступ ещё не подтверждён. После модерации форма автоматически сменится на кабинет.", "pending");
-  }
-
-  function renderRejectedAccess() {
-    setApprovedView(false);
-    setVisible(courierCabinetPanel, false);
-    setVisible(registrationPanel, true);
-    registrationStatus.textContent = "Предыдущая заявка была отклонена. Можно отправить новую заявку или связаться с парком.";
-    setBanner("По этому Telegram-аккаунту доступ пока не открыт.", "warning");
-  }
-
-  async function loadAccessState() {
+  async function loadHome() {
     const userMeta = getTelegramUserMeta();
-
     if (!userMeta.telegramUserId && !userMeta.telegramUsername) {
-      setApprovedView(false);
-      setVisible(courierCabinetPanel, false);
-      setVisible(registrationPanel, true);
-      setBanner("Mini App открыт вне Telegram-авторизации. Для автоматического входа откройте его из бота.", "warning");
+      renderGuest("Откройте mini app из Telegram-бота, чтобы система определила ваш доступ.");
       return;
     }
-
-    setBanner("Проверяю доступ к кабинету...", "neutral");
 
     try {
-      const payload = await submitJsonp("getAccessStatusByTelegram", userMeta);
-      if (!payload?.ok) {
-        throw new Error(payload?.error || "Не удалось проверить статус доступа.");
-      }
+      const payload = await submitJsonp("getCourierHome", userMeta);
+      const home = normalizeHomePayload(payload);
 
-      const access = payload.access || {};
-      if (access.state === "approved") {
-        renderApprovedCabinet(access);
-        loadNotifications(access.courierId);
+      if (home && home.accessState === "approved") {
+        renderHome(home);
         return;
       }
 
-      if (access.state === "rejected" || access.state === "blocked") {
-        renderRejectedAccess();
+      if (payload?.home?.accessState === "rejected" || payload?.home?.accessState === "blocked") {
+        renderGuest("Доступ по этому Telegram-аккаунту не открыт. При необходимости отправьте новую заявку.");
         return;
       }
 
-      renderPendingAccess(access.registration || null);
+      renderGuest("Доступ ещё не подтверждён. После модерации здесь автоматически откроется кабинет.");
     } catch (error) {
-      setApprovedView(false);
-      setVisible(courierCabinetPanel, false);
-      setVisible(registrationPanel, true);
-      setBanner(error.message || "Не удалось проверить доступ к кабинету.", "warning");
+      renderGuest(error.message || "Не удалось загрузить домашний экран.");
     }
   }
 
-  function renderNotifications(notifications) {
-    if (!courierNotificationsList) return;
-
-    if (!Array.isArray(notifications) || !notifications.length) {
-      courierNotificationsList.innerHTML = `<div class="courier-notification-empty">Пока уведомлений нет. Когда в CRM зафиксируют срыв или важное сообщение, оно появится здесь.</div>`;
-      if (cabinetFields.notifications) cabinetFields.notifications.textContent = "0";
+  function renderNotificationsSheet(notifications) {
+    if (!notifications.length) {
+      showSheet("Уведомления", `<p>Пока уведомлений нет. Когда в CRM зафиксируют срыв или важное сообщение, оно появится здесь.</p>`);
       return;
     }
 
-    if (cabinetFields.notifications) {
-      cabinetFields.notifications.textContent = String(notifications.length);
-    }
-
-    courierNotificationsList.innerHTML = notifications.map((item) => {
-      const type = String(item.type || item.notification_type || "").trim().toLowerCase();
-      const title = type === "failure_detected" ? "Зафиксирован срыв" : "Уведомление от парка";
-      const date = String(item.created_at || item.sent_at || "").trim();
-      const message = String(item.message || "Новое уведомление").trim();
-
-      return `
-        <article class="courier-notification-card ${type === "failure_detected" ? "is-failure" : ""}">
-          <strong>${title}</strong>
-          <p>${message}</p>
-          <p>${date || "Сейчас"}</p>
-        </article>
-      `;
-    }).join("");
+    const html = `
+      <div class="sheet-list">
+        ${notifications.map((item) => {
+          const type = String(item.type || "").trim().toLowerCase();
+          const title = type === "failure_detected" ? "Зафиксирован срыв" : "Уведомление от парка";
+          return `
+            <article class="sheet-list-item ${type === "failure_detected" ? "is-failure" : ""}">
+              <strong>${escapeHtml(title)}</strong>
+              <p>${escapeHtml(item.message || "Новое уведомление")}</p>
+              <p>${escapeHtml(item.created_at || item.sent_at || "")}</p>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    `;
+    showSheet("Уведомления", html);
   }
 
-  async function loadNotifications(courierId) {
+  async function openNotifications() {
+    const courierId = currentHomePayload?.courier?.id || currentHomePayload?.courierId || "";
     if (!courierId) {
-      renderNotifications([]);
+      openPlaceholderSheet("Уведомления", "Кабинет ещё не загрузил ID курьера.");
       return;
     }
 
     try {
       const payload = await submitJsonp("getCourierNotifications", { courierId });
-      if (!payload?.ok) {
-        throw new Error(payload?.error || "Не удалось загрузить уведомления.");
-      }
-      renderNotifications(payload.notifications || []);
+      renderNotificationsSheet(Array.isArray(payload?.notifications) ? payload.notifications : []);
     } catch (error) {
-      renderNotifications([]);
+      openPlaceholderSheet("Уведомления", error.message || "Не удалось открыть уведомления.");
     }
   }
 
-  fillCityOptions();
-  renderTariffSummary();
-  loadAccessState();
-
-  tariffCitySelect.addEventListener("change", renderTariffSummary);
-  tariffWorkTypeSelect.addEventListener("change", renderTariffSummary);
-
-  navButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      scrollToSection(button.dataset.navTarget || "");
-    });
-  });
-
-  if (refreshCabinetButton) {
-    refreshCabinetButton.addEventListener("click", () => {
-      loadAccessState();
-    });
+  function openWithdrawInfo() {
+    showSheet("Вывод", `
+      <p>Раздел вывода пока работает как информационное окно.</p>
+      <p>Здесь будет короткая инструкция по выплатам, графику и статусу доступности вывода.</p>
+      <p>Полный сценарий вывода добавим следующим этапом.</p>
+    `);
   }
 
-  registrationForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const fullName = document.getElementById("registrationFullName").value.trim();
-    const phone = document.getElementById("registrationPhone").value.trim();
-
-    if (!fullName || !phone) {
-      registrationStatus.textContent = "Заполни ФИО и телефон, чтобы отправить заявку на доступ.";
-      return;
-    }
-
-    registrationStatus.textContent = "Отправляю заявку на доступ...";
-
-    const userMeta = getTelegramUserMeta();
-
-    submitJsonp("submitRegistration", {
-      fullName,
-      phone,
-      telegramUserId: userMeta.telegramUserId,
-      telegramUsername: userMeta.telegramUsername,
-      chatId: userMeta.chatId
-    }).then((payload) => {
-      if (!payload?.ok) {
-        throw new Error(payload?.error || "Не удалось отправить заявку.");
-      }
-
-      if (tg?.HapticFeedback?.notificationOccurred) {
-        tg.HapticFeedback.notificationOccurred("success");
-      }
-
-      registrationStatus.textContent = `Заявка отправлена. ID: ${payload.requestId || "—"}. После проверки менеджер откроет доступ к кабинету.`;
-      registrationForm.reset();
-      setBanner("Заявка отправлена. После одобрения кабинет будет открываться автоматически.", "pending");
-    }).catch((error) => {
-      registrationStatus.textContent = error.message || "Не удалось отправить заявку на доступ.";
+  function bindActions() {
+    dom.openCourierTab.addEventListener("click", () => {
+      dom.openCourierTab.classList.add("is-active");
+      dom.openCandidateTab.classList.remove("is-active");
+      setVisible(dom.courierGuestPanel, true);
+      setVisible(dom.candidateGuestPanel, false);
     });
-  });
 
-  candidateForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const fullName = document.getElementById("candidateFullName").value.trim();
-    const phone = document.getElementById("candidatePhone").value.trim();
-    const city = document.getElementById("candidateCity").value.trim();
-    const workType = document.getElementById("candidateWorkType").value.trim();
-
-    if (!fullName || !phone) {
-      candidateStatus.textContent = "Заполни хотя бы ФИО и телефон, чтобы оставить заявку.";
-      return;
-    }
-
-    candidateStatus.textContent = "Отправляю заявку кандидата...";
-
-    submitJsonp("submitCandidateLead", {
-      fullName,
-      phone,
-      city,
-      workType
-    }).then((payload) => {
-      if (!payload?.ok) {
-        throw new Error(payload?.error || "Не удалось отправить заявку кандидата.");
-      }
-
-      if (tg?.HapticFeedback?.notificationOccurred) {
-        tg.HapticFeedback.notificationOccurred("success");
-      }
-
-      candidateStatus.textContent = `Заявка отправлена. ID: ${payload.leadId || "—"}. Менеджер сможет увидеть её в CRM.`;
-      candidateForm.reset();
-    }).catch((error) => {
-      candidateStatus.textContent = error.message || "Не удалось отправить заявку кандидата.";
+    dom.openCandidateTab.addEventListener("click", () => {
+      dom.openCandidateTab.classList.add("is-active");
+      dom.openCourierTab.classList.remove("is-active");
+      setVisible(dom.courierGuestPanel, false);
+      setVisible(dom.candidateGuestPanel, true);
     });
-  });
+
+    dom.registrationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const fullName = document.getElementById("registrationFullName").value.trim();
+      const phone = document.getElementById("registrationPhone").value.trim();
+      const userMeta = getTelegramUserMeta();
+
+      if (!fullName || !phone) {
+        dom.registrationStatus.textContent = "Заполните ФИО и телефон.";
+        return;
+      }
+
+      dom.registrationStatus.textContent = "Отправляю заявку...";
+
+      try {
+        const payload = await submitJsonp("submitRegistration", {
+          fullName,
+          phone,
+          telegramUserId: userMeta.telegramUserId,
+          telegramUsername: userMeta.telegramUsername,
+          chatId: userMeta.chatId
+        });
+        if (!payload?.ok) {
+          throw new Error(payload?.error || "Не удалось отправить заявку.");
+        }
+        dom.registrationForm.reset();
+        dom.registrationStatus.textContent = `Заявка отправлена. ID: ${payload.requestId || "—"}. После одобрения кабинет откроется автоматически.`;
+      } catch (error) {
+        dom.registrationStatus.textContent = error.message || "Не удалось отправить заявку.";
+      }
+    });
+
+    dom.candidateForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const fullName = document.getElementById("candidateFullName").value.trim();
+      const phone = document.getElementById("candidatePhone").value.trim();
+      const city = document.getElementById("candidateCity").value.trim();
+      const workType = document.getElementById("candidateWorkType").value.trim();
+
+      if (!fullName || !phone) {
+        dom.candidateStatus.textContent = "Заполните ФИО и телефон.";
+        return;
+      }
+
+      dom.candidateStatus.textContent = "Отправляю заявку...";
+
+      try {
+        const payload = await submitJsonp("submitCandidateLead", { fullName, phone, city, workType });
+        if (!payload?.ok) {
+          throw new Error(payload?.error || "Не удалось отправить заявку.");
+        }
+        dom.candidateForm.reset();
+        dom.candidateStatus.textContent = `Заявка отправлена. ID: ${payload.leadId || "—"}. Менеджер увидит её в CRM.`;
+      } catch (error) {
+        dom.candidateStatus.textContent = error.message || "Не удалось отправить заявку.";
+      }
+    });
+
+    document.querySelectorAll("[data-home-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.homeAction;
+        if (action === "support") {
+          openPlaceholderSheet("Поддержка", "Кнопка связи с поддержкой внедрена. Реальный сценарий добавим следующим этапом.");
+          return;
+        }
+        openPlaceholderSheet("В разработке", "Этот раздел уже заложен в интерфейс и будет реализован следующим этапом.");
+      });
+    });
+
+    document.querySelectorAll("[data-bottom-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const action = button.dataset.bottomAction;
+        if (action === "withdraw") {
+          openWithdrawInfo();
+          return;
+        }
+        if (action === "notifications") {
+          openNotifications();
+          return;
+        }
+        openPlaceholderSheet("В разработке", "Раздел уже предусмотрен на главном экране и будет реализован следующим этапом.");
+      });
+    });
+
+    dom.openNotificationsCard.addEventListener("click", openNotifications);
+    dom.sheetBackdrop.addEventListener("click", closeSheet);
+    dom.closeSheetButton.addEventListener("click", closeSheet);
+  }
+
+  bindActions();
+  loadHome();
 })();

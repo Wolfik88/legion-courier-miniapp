@@ -4,236 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>LEGION Courier Bot</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
-  <div class="page-shell">
-    <header class="hero">
-      <div class="hero-brand">
-        <div class="hero-logo">L</div>
-        <div>
-          <p class="hero-eyebrow">LEGION &amp; RESPECT</p>
-          <h1>Парк курьеров в Telegram</h1>
-        </div>
-      </div>
-
-      <div class="hero-layout">
-        <section class="hero-copy card">
-          <p class="hero-kicker">Личный кабинет и подключение в одном окне</p>
-          <h2>Работай с парком, который показывает доход прозрачно и держит связь в одном mini app</h2>
-          <p class="hero-text">
-            Для действующих курьеров здесь будет личный кабинет со статистикой, доходом, уведомлениями и связью с парком.
-            Для новых кандидатов здесь же будет быстрый вход в заявку и понятный оффер по тарифам.
-          </p>
-
-          <div class="hero-actions">
-            <button class="primary-button" type="button" data-nav-target="cabinet">Открыть кабинет</button>
-            <button class="ghost-button" type="button" data-nav-target="candidate">Подать заявку</button>
-          </div>
-
-          <div class="hero-note">
-            Доступ в кабинет подтверждается менеджером после проверки заявки.
-          </div>
-        </section>
-
-        <aside class="hero-side">
-          <section class="card hero-metrics">
-            <div class="metric">
-              <span class="metric-value">4</span>
-              <span class="metric-label">Формата работы</span>
-            </div>
-            <div class="metric">
-              <span class="metric-value">24/7</span>
-              <span class="metric-label">Telegram-точка связи</span>
-            </div>
-            <div class="metric">
-              <span class="metric-value">1</span>
-              <span class="metric-label">Mini App для старта</span>
-            </div>
-          </section>
-
-          <section class="card hero-status">
-            <p class="section-eyebrow">Старт v1</p>
-            <h3>Тестируем для себя, готовим к публичному запуску</h3>
-            <p>
-              Сейчас экран собран как брендированный вход: и для своих курьеров, и для новых кандидатов.
-              Контент можно безболезненно дополнять по мере подготовки запуска.
-            </p>
-          </section>
-        </aside>
-      </div>
-    </header>
-
-    <main class="content-grid">
-      <section class="card">
-        <p class="section-eyebrow">Преимущества</p>
-        <div class="benefits-grid">
-          <article class="info-tile">
-            <h3>Стабильные выплаты</h3>
-            <p>Показываем фикс по городу и типу работы, а условия доплат заранее видны в оффере.</p>
-          </article>
-          <article class="info-tile">
-            <h3>Поддержка менеджера</h3>
-            <p>Курьер пишет в парк прямо из Telegram, без отдельного поиска контактов и лишних переходов.</p>
-          </article>
-          <article class="info-tile">
-            <h3>Личный кабинет</h3>
-            <p>Статистика по заказам, доходу, срывам и активности будет доступна в одном интерфейсе.</p>
-          </article>
-          <article class="info-tile">
-            <h3>Прозрачные уведомления</h3>
-            <p>Если по курьеру зафиксирован срыв, уведомление приходит в тот же Telegram-бот.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="card">
-        <p class="section-eyebrow">О парке</p>
-        <div class="about-grid">
-          <div class="about-stat">
-            <strong>LEGION</strong>
-            <span>бренд парка и единая точка входа</span>
-          </div>
-          <div class="about-stat">
-            <strong>Разные города</strong>
-            <span>логика тарифа строится от выбранного города</span>
-          </div>
-          <div class="about-stat">
-            <strong>Пеший / Вело / Электро / Авто</strong>
-            <span>под разные форматы доставки</span>
-          </div>
-          <div class="about-stat">
-            <strong>Подключение через Telegram</strong>
-            <span>без сложных кабинетов и лишних логинов</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="section-head">
+  <main class="miniapp-root">
+    <section class="guest-view" id="guestView">
+      <div class="guest-card">
+        <div class="guest-brand">
+          <div class="guest-logo">L</div>
           <div>
-            <p class="section-eyebrow">Вакансии</p>
-            <h3>Подготовленный блок под публичный запуск</h3>
+            <p class="guest-eyebrow">LEGION &amp; RESPECT</p>
+            <h1>Кабинет курьера</h1>
           </div>
-          <span class="section-tag">Можно править в любой момент</span>
         </div>
 
-        <div class="vacancies-grid">
-          <article class="vacancy-card">
-            <h4>Пеший курьер</h4>
-            <p>Гибкий старт для городских доставок и коротких маршрутов.</p>
-          </article>
-          <article class="vacancy-card">
-            <h4>Велокурьер</h4>
-            <p>Для тех, кто хочет больше плотности по заказам и быстрый городской ритм.</p>
-          </article>
-          <article class="vacancy-card">
-            <h4>Электровело</h4>
-            <p>Компромисс между мобильностью и выработкой на смене.</p>
-          </article>
-          <article class="vacancy-card">
-            <h4>Автокурьер</h4>
-            <p>Под формат с более тяжёлыми заказами и дальними расстояниями.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="card tariff-card" id="tariffOffer">
-        <div class="section-head">
-          <div>
-            <p class="section-eyebrow">Сколько можно зарабатывать</p>
-            <h3>Ориентир по фикс-оплате за заказ</h3>
-          </div>
-          <span class="section-tag" id="tariffDataState">Тарифы v1</span>
-        </div>
-
-        <div class="tariff-form">
-          <label class="field">
-            <span>Город</span>
-            <select id="tariffCitySelect"></select>
-          </label>
-
-          <label class="field">
-            <span>Тип работы</span>
-            <select id="tariffWorkTypeSelect">
-              <option value="auto">Авто</option>
-              <option value="electro">Электро-вело</option>
-              <option value="velo">Вело</option>
-              <option value="foot">Пеший</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="tariff-summary" id="tariffSummary"></div>
-        <p class="tariff-note" id="tariffNote"></p>
-      </section>
-
-      <section class="card" id="cabinet">
-        <p class="section-eyebrow">Для действующего курьера</p>
-        <h3>Доступ в личный кабинет</h3>
-        <p class="section-text">
-          Если ты уже работаешь с парком, mini app проверит привязку твоего Telegram-аккаунта.
-          Если доступ ещё не подтверждён, ниже останется форма заявки на модерацию.
+        <p class="guest-text">
+          Если вы уже работаете с парком, отправьте заявку на доступ. Если вы новый кандидат, оставьте контакт для подключения.
         </p>
 
-        <div class="cabinet-access-note" id="accessStateBanner"></div>
+        <div class="guest-switch">
+          <button class="guest-tab is-active" id="openCourierTab" type="button">Я уже в парке</button>
+          <button class="guest-tab" id="openCandidateTab" type="button">Стать курьером</button>
+        </div>
 
-        <section class="courier-cabinet is-hidden" id="courierCabinetPanel">
-          <div class="courier-cabinet-head">
-            <div>
-              <p class="section-eyebrow">Ваш кабинет</p>
-              <h4 id="courierCabinetName">Курьер</h4>
-            </div>
-            <button class="ghost-button" id="refreshCabinetButton" type="button">Обновить кабинет</button>
-          </div>
-
-          <div class="courier-cabinet-grid">
-            <article class="courier-cabinet-item">
-              <span>Телефон</span>
-              <strong id="courierCabinetPhone">—</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Город</span>
-              <strong id="courierCabinetCity">—</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Статус</span>
-              <strong id="courierCabinetStatus">—</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Тип работы</span>
-              <strong id="courierCabinetWorkType">—</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Заказов</span>
-              <strong id="courierCabinetOrders">0</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Доход</span>
-              <strong id="courierCabinetIncome">—</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Срывов</span>
-              <strong id="courierCabinetFailures">0</strong>
-            </article>
-            <article class="courier-cabinet-item">
-              <span>Уведомлений</span>
-              <strong id="courierCabinetNotifications">0</strong>
-            </article>
-          </div>
-
-          <section class="courier-cabinet-feed">
-            <div class="courier-cabinet-feed-head">
-              <div>
-                <p class="section-eyebrow">Уведомления</p>
-                <h4>Срыв и важные сообщения</h4>
-              </div>
-            </div>
-            <div class="courier-notifications-list" id="courierNotificationsList"></div>
-          </section>
-        </section>
-
-        <div id="registrationPanel">
+        <section class="guest-panel" id="courierGuestPanel">
+          <h2>Заявка на доступ</h2>
           <form class="stack-form" id="registrationForm">
             <label class="field">
               <span>ФИО</span>
@@ -243,50 +38,122 @@
               <span>Телефон</span>
               <input id="registrationPhone" type="tel" placeholder="+7 999 123-45-67">
             </label>
-            <button class="primary-button" type="submit">Отправить заявку на доступ</button>
+            <button class="primary-button" type="submit">Отправить заявку</button>
           </form>
-          <p class="form-status" id="registrationStatus">После одобрения здесь будет открыт доступ в личный кабинет.</p>
+          <p class="guest-status" id="registrationStatus">После одобрения здесь автоматически откроется кабинет.</p>
+        </section>
+
+        <section class="guest-panel is-hidden" id="candidateGuestPanel">
+          <h2>Заявка на подключение</h2>
+          <form class="stack-form" id="candidateForm">
+            <label class="field">
+              <span>ФИО</span>
+              <input id="candidateFullName" type="text" placeholder="Как к вам обращаться">
+            </label>
+            <label class="field">
+              <span>Телефон</span>
+              <input id="candidatePhone" type="tel" placeholder="+7 999 123-45-67">
+            </label>
+            <label class="field">
+              <span>Город</span>
+              <input id="candidateCity" type="text" placeholder="Москва">
+            </label>
+            <label class="field">
+              <span>Формат работы</span>
+              <select id="candidateWorkType">
+                <option value="Пеший">Пеший</option>
+                <option value="Вело">Вело</option>
+                <option value="Электро-вело">Электро-вело</option>
+                <option value="Авто">Авто</option>
+              </select>
+            </label>
+            <button class="ghost-button" type="submit">Оставить заявку</button>
+          </form>
+          <p class="guest-status" id="candidateStatus">Менеджер увидит заявку в CRM и свяжется с вами.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="approved-view is-hidden" id="approvedView">
+      <header class="approved-topbar">
+        <div class="approved-profile">
+          <div class="approved-avatar" id="homeCourierInitials">L</div>
+          <div class="approved-profile-copy">
+            <h2 id="homeCourierName">Курьер</h2>
+            <p class="approved-badge" id="homeCourierBadge">Партнёрский сервис</p>
+          </div>
         </div>
+
+        <div class="approved-actions">
+          <button class="icon-action" data-home-action="profile" type="button" title="Профиль">👤</button>
+          <button class="icon-action" data-home-action="settings" type="button" title="Настройки">⚙️</button>
+          <button class="icon-action" data-home-action="support" type="button" title="Поддержка">✉️</button>
+        </div>
+      </header>
+
+      <section class="news-section">
+        <div class="section-heading">
+          <h3>Новости</h3>
+        </div>
+        <div class="news-row" id="homeNewsRow"></div>
       </section>
 
-      <section class="card" id="candidate">
-        <p class="section-eyebrow">Для нового кандидата</p>
-        <h3>Оставить заявку на подключение</h3>
-        <p class="section-text">
-          Этот блок можно использовать как мягкий вход в рекрутинг: собираем контакт, город и формат работы, а потом дорабатываем контент под публичный запуск.
-        </p>
+      <section class="stats-grid">
+        <article class="stat-card stat-card-income">
+          <p class="stat-label">Общий доход</p>
+          <strong class="stat-value" id="homeIncome">0 ₽</strong>
+          <p class="stat-meta">Всего заказов <span id="homeOrders">0</span></p>
+        </article>
 
-        <form class="stack-form" id="candidateForm">
-          <label class="field">
-            <span>ФИО</span>
-            <input id="candidateFullName" type="text" placeholder="Как к вам обращаться">
-          </label>
-          <label class="field">
-            <span>Телефон</span>
-            <input id="candidatePhone" type="tel" placeholder="+7 999 123-45-67">
-          </label>
-          <label class="field">
-            <span>Город</span>
-            <input id="candidateCity" type="text" placeholder="Москва">
-          </label>
-          <label class="field">
-            <span>Интересующий формат</span>
-            <select id="candidateWorkType">
-              <option value="Пеший">Пеший</option>
-              <option value="Вело">Вело</option>
-              <option value="Электро-вело">Электро-вело</option>
-              <option value="Авто">Авто</option>
-            </select>
-          </label>
-          <button class="ghost-button" type="submit">Отправить заявку</button>
-        </form>
-        <p class="form-status" id="candidateStatus">Форма пока тестовая: можно свободно менять поля и тексты перед запуском.</p>
+        <article class="stat-card stat-card-alerts" id="openNotificationsCard">
+          <p class="stat-label">Срывы и уведомления</p>
+          <strong class="stat-value" id="homeFailures">0</strong>
+          <p class="stat-meta" id="homeNotificationsMeta">Новых уведомлений: 0</p>
+        </article>
       </section>
-    </main>
-  </div>
+
+      <button class="invite-card" data-home-action="invite" type="button">
+        <span class="invite-icon">🎁</span>
+        <span class="invite-copy">
+          <strong>Пригласи друга</strong>
+          <span>Раздел в разработке</span>
+        </span>
+        <span class="invite-state">Позже</span>
+      </button>
+
+      <nav class="bottom-nav">
+        <button class="bottom-nav-item" data-bottom-action="withdraw" type="button">
+          <span>💳</span>
+          <strong>Вывод</strong>
+        </button>
+        <button class="bottom-nav-item" data-bottom-action="orders" type="button">
+          <span>📦</span>
+          <strong>Заказы</strong>
+        </button>
+        <button class="bottom-nav-item" data-bottom-action="notifications" type="button">
+          <span>🔔</span>
+          <strong>Уведомления</strong>
+        </button>
+        <button class="bottom-nav-item" data-bottom-action="top10" type="button">
+          <span>🏆</span>
+          <strong>Топ-10</strong>
+        </button>
+      </nav>
+    </section>
+  </main>
+
+  <div class="sheet-backdrop is-hidden" id="sheetBackdrop"></div>
+
+  <section class="sheet-panel is-hidden" id="infoSheet">
+    <div class="sheet-head">
+      <h3 id="sheetTitle">Информация</h3>
+      <button class="sheet-close" id="closeSheetButton" type="button">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </section>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="config.js?v=6"></script>
-  <script src="app.js?v=6"></script>
+  <script src="config.js?v=7"></script>
+  <script src="app.js?v=7"></script>
 </body>
 </html>
